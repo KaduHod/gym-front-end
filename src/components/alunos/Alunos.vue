@@ -2,30 +2,49 @@
   import SearchComponent from './SearchComponent.vue'
   import CreateComponent from './CreateComponent.vue'
   import ListComponent   from './ListComponent.vue'
+  import MainButton      from '../mainButton.vue'
   
 </script>
 <template>
-  <main>
+  <main v-if="AlunoComponentReady">
+    <h1>Alunos</h1>
     <div id="search">
       <SearchComponent :alunos="alunos" />
     </div>
-    <div id="create">
+    <div>
+    </div>
+    <div class="create-button-container">
       <input 
         type="button" 
         data-type="alunos" 
-        value="Create"
-        @click="showModals('createModal')">
+        value="Criar Aluno"
+        @click="showModals('create')">
     </div>
-    <div id="list">
+    <div class="list-button-container">
       <input 
         type="button" 
         data-type="alunos" 
-        value="List"
-        @click="showModals('listModal')">
+        value="Listar Alunos"
+        @click="showModals('list')">
     </div>
-    <div id="modalsAlunos">
-      <CreateComponent id="createModal" :professorId="professorId" data-modal-name="CreateComponent" class="hidden"/>
-      <ListComponent id="listModal" :professorId="professorId" data-modal-name="ListComponent" class="hidden"/> 
+    <div class="modals" v-show="showCreateComponent || showListComponent">
+      
+        <CreateComponent 
+          v-show="showCreateComponent" 
+          id="createModal" 
+          :professorId="professorId" 
+          data-modal-name="CreateComponent"
+          @fechar-create="closeCreate"
+          />
+          
+        <ListComponent 
+          v-show="showListComponent" 
+          id="listModal" 
+          :professorId="professorId" 
+          :alunos="alunos"
+          data-modal-name="ListComponent"
+          @fechar-list="closeList" /> 
+      
     </div>
     
   </main>
@@ -39,38 +58,64 @@
     components: {
       SearchComponent,
       CreateComponent,
-      ListComponent
+      ListComponent,
+      MainButton
     },
+    props : ['profile','alunos'],
     data() {
       return {
         isHidden: false,
-        alunos: [],
         profileId:'31',
-        profile: {},
-        professorId : null
+        professorId : null,
+        showCreateComponent : false,
+        showListComponent : false,
+        tituloCriar:'Criar',
+        tituloListar:'Listar',
+        AlunoComponentReady : false
       }
     },
     methods : {
       showModals(str){
-        setModalAlunoHidden()
-        const modal = document.getElementById(str)
-        modal.classList.remove('hidden')
+        if (str === 'create'){
+          this.showCreateComponent = true
+          this.showListComponent = false
+          return
+        } 
+        this.showCreateComponent = false 
+        this.showListComponent = true
+      },
+      closeCreate(){
+        this.showCreateComponent = false
+      },
+      closeList(){
+        this.showListComponent = false
+      },
+      async getData(){
+        
+        
       }
     },
-    computed : { 
-
-    },
     async mounted(){
-      this.profile = await getProfile(this.profileId)
-      this.professorId = this.profile.professorId
-      const responseAlunos = await axios.get(`http://localhost:9999/professor/${this.professorId}/alunos`)
-      this.alunos = responseAlunos.data.data.alunos
+      await this.getData()
+      this.AlunoComponentReady = true
     }
   }
 </script>
 
 <style scoped>
-
+#modalsAlunos{
+  width: 100vw;
+  height: 100vh;
+  display: block;
+  position: absolute;
+  background-color: rgba(255, 255, 255, 0.904);
+}
+#modalsAlunosInner{
+  display: flex;
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+}
 main{
   display: flex;
   flex-direction: column;
@@ -86,9 +131,6 @@ main{
   flex:.6;
 }
 
-#search input{
-
-}
 #create{
   display: flex;
   flex-direction: column;
